@@ -27,6 +27,8 @@
 #ifndef OMNIC_UTIL_H_
 #define OMNIC_UTIL_H_
 
+#include <omnic/Version.h>
+
 namespace omnic {
   namespace util {
     /// Read float value from stream (e.g. std::istream)

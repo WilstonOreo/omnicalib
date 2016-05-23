@@ -108,15 +108,6 @@ typedef struct omnic_calibrated_projector {
 
     /// Buffer with calibrated pixels
     omni_uvw_pixel* buffer;
-
-    /// Brightness correction buffer width
-    uint32_t brightness_correction_width;
-
-    /// Brightness correction buffer height
-    uint32_t brightness_correction_height;
-
-    /// Buffer with brightness corrected pixels
-    omnic_channelcorrection* brightness_correction;
 };
 
 /// Calibration for several projectors
@@ -124,10 +115,9 @@ typedef struct omnic_calibration {
     /// Header string
     char header[80];
 
-    /**@brief Calibration content type
-     **@detail 0 = UV coords, 1 = UVW coords
-     **/
-    uint32_t content_type;
+    uint32_t major_version;
+    uint32_t minor_version;
+    uint32_t patch_version;
 
     /// Number of projectors
     uint32_t num_projectors;

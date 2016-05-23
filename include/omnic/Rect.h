@@ -55,7 +55,7 @@ namespace omnic {
     
     /// Load rectangle from stream
     template<typename STREAM>
-    void load(STREAM& _is) {
+    void load(STREAM& _is, Version = Version::latest()) {
       using namespace util;
       readBinary(_is,offsetX_);
       readBinary(_is,offsetY_);

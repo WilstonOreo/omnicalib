@@ -60,7 +60,7 @@ namespace omnic
 
     /// Load from stream
     template<typename STREAM>
-    inline void load(STREAM& _is)
+    inline void load(STREAM& _is, Version _version = Version::latest())
     {
       using namespace util;
       readBinary(_is,gamma_);

@@ -34,13 +34,13 @@ namespace omnic {
 
     /// Load from stream
     template<typename T>
-    inline void load(STREAM& _is) {
-      red_.load(_is);
-      green_.load(_is);
-      blue_.load(_is);
-      all_.load(_is);
+    inline void load(STREAM& _is, Version _version = Version::latest()) {
+      red_.load(_is,_version);
+      green_.load(_is,_version);
+      blue_.load(_is,_version);
+      all_.load(_is,_version);
     }
-  
+
     /// Return correction for red channel
     inline ChannelCorrection const& red() const {
       return red_;

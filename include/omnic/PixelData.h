@@ -28,12 +28,12 @@
 #define OMNIC_PIXELBUFFER_H_
 
 #include <vector>
-#include "UVWPixel.h"
+#include "UVDBPixel.h"
 
 namespace omnic
 {
   /// Pixel buffer stores matrix with calibration values foreach pixel
-  struct PixelBuffer
+  struct PixelData
   {
     inline static constexpr maxResolution()
     {
@@ -59,7 +59,7 @@ namespace omnic
     }
 
     /// Return vector of stored pixel values
-    inline std::vector<UVWPixel> const& data() const
+    inline std::vector<UVDBPixel> const& data() const
     {
       return data_;
     }
@@ -122,14 +122,14 @@ namespace omnic
 
     /// Load from stream
     template<typename STREAM>
-    void load(STREAM& _stream)
+    void load(STREAM& _stream, Version = Version::latest())
     {
       readBinary(_stream,width_);
       readBinary(_stream,height_);
       cassert(width_ <= maxResolution());
       cassert(height_ <= maxResolution());
       data_.resize(width_ * height_);
-      _stream.read(static_cast<char*>(data_.data()),data_.size() * sizeof(UVWPixel));
+      _stream.read(static_cast<char*>(data_.data()),data_.size() * sizeof(UVDBPixel));
     }
 
   private:
