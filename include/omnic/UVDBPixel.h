@@ -4,10 +4,10 @@
  *
  * This file is part of Omnidome.
  *
- * Simplified BSD license 
+ * Simplified BSD license
  * Copyright (c) 2016
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:  
+ * modification, are permitted provided that the following conditions are met:
  * * Redistributions of source code must retain the above copyright
      notice, this list of conditions and the following disclaimer.
  * * Redistributions in binary form must reproduce the above copyright
@@ -29,6 +29,7 @@
 #define OMNIC_UVDBPIXEL_H_
 
 #include <algorithm>
+#include <cmath>
 
 namespace omnic {
   /**@brief Calibrated pixel as UVW texture coordinates and blend mask value
@@ -38,13 +39,13 @@ namespace omnic {
     UVDBPixel() {
     }
 
-    UVDBPixel(channel_type _u, channel_type _v, channel_type _d, channel_type _b) : 
+    UVDBPixel(channel_type _u, channel_type _v, channel_type _d, channel_type _b) :
       u_(_u),
       v_(_v),
       d_(_d),
       b_(_b) {
     }
- 
+
     /// U Texture coordinate
     inline channel_type u() const {
       return u_;
@@ -67,7 +68,7 @@ namespace omnic {
         UVDBPixel const& _x00,
         UVDBPixel const& _x01,
         UVDBPixel const& _x10,
-        UVDBPixel const& _x11) {        
+        UVDBPixel const& _x11) {
         return UVDBPixel(
           (_x00.u() + _x01.u() + _x10.u() + _x11.u()) / 4,
           (_x00.v() + _x01.v() + _x10.v() + _x11.v()) / 4,
@@ -80,17 +81,19 @@ namespace omnic {
         UVDBPixel const& _x00,
         UVDBPixel const& _x01,
         UVDBPixel const& _x10,
-        UVDBPixel const& _x11) {    
-      return 
-           ((std::abs(_x00.u() - _x11.u())*2 +  
-            std::abs(_x00.u() - _x11.u())*2 +   
-            std::abs(_x00.u() - _x11.u())) + 
-           (std::abs(_x00.v() - _x11.v())*2 +  
-            std::abs(_x00.v() - _x11.v())*2 +   
-            std::abs(_x00.v() - _x11.v()))) / 10; 
+        UVDBPixel const& _x11) {
+      return (diff(_x00,_x01)*2 + diff(_x00,_x10)*2 + diff(_x00,_x11)) / 10;
     }
-    
-    channel_type u_,v_,d_,b_; 
+
+    inline static int diff(
+        UVDBPixel const& _a,
+        UVDBPixel const& _b) {
+      return
+        abs(int(_a.u()) - int(_b.u())) +
+        abs(int(_b.u()) - int(_b.v()));
+    }
+
+    channel_type u_,v_,d_,b_;
   };
 }
 

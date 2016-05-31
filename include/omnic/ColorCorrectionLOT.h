@@ -30,6 +30,7 @@
 #define OMNIC_COLORCORRECTIONLOT_H_
 
 #include <cassert>
+#include <vector>
 #include <omnic/util.h>
 
 namespace omnic {
@@ -43,7 +44,7 @@ namespace omnic {
         value_type _red,
         value_type _green,
         value_type _blue,
-        value_type _all) : 
+        value_type _all) :
       red_(_red),
       green_(_green),
       blue_(_blue),
@@ -58,7 +59,7 @@ namespace omnic {
     inline value_type green() const {
       return green_;
     }
-    
+
     /// Blue value
     inline value_type blue() const {
       return blue_;
@@ -68,7 +69,7 @@ namespace omnic {
       return all_;
     }
 
-  private:  
+  private:
     float red_;
     float green_;
     float blue_;
@@ -76,7 +77,7 @@ namespace omnic {
   };
 
   /// Look up table for color correction
-  struct ColorCorrectionLOT {    
+  struct ColorCorrectionLOT {
 
     inline static constexpr size_t maxSize() { return 65536; }
     inline static constexpr size_t minSize() { return 256; }
@@ -116,7 +117,7 @@ namespace omnic {
     }
 
   private:
-    std::vector<ColorCorrectionInfo> data_;  
+    std::vector<ColorCorrectionInfo> data_;
   };
 }
 
