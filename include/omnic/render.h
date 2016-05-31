@@ -107,17 +107,12 @@ namespace omnic
       /// Bind calibration texture
       glUniform1i(calibrationTexLoc_,1);
       glActiveTexture(GL_TEXTURE0 + 1);
-      glBindTexture(_target, calibrationTexId_);
+      glBindTexture(GL_TEXTURE_RECT, calibrationTexId_);
 
       /// Bind colorcorrection lookup texture;
       glUniform1i(colorCorrectionTexLoc_,2);
       glActiveTexture(GL_TEXTURE0 + 2);
-      glBindTexture(_target, colorCorrectionTexId_);
-
-      /// Bind brightness correction texture
-      glUniform1i(brightnessTexLoc_,3);
-      glActiveTexture(GL_TEXTURE0 + 3);
-      glBindTexture(_target, brightnessTexId_);
+      glBindTexture(GL_TEXTURE_1D, colorCorrectionTexId_);
 
       glUniform1i(inputWidthLoc_,_inputWidth);
       glUniform1i(inputHeightLoc_,_inputHeight);  
@@ -126,6 +121,9 @@ namespace omnic
     inline void releaseCalibration() const
     {
       glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_1D,0);
+      glBindTexture(GL_TEXTURE_2D,0);
+      glBindTexture(GL_TEXTURE_RECT,0);
       glUseProgram(0);
     }
 
@@ -150,9 +148,6 @@ namespace omnic
 
     GLuint calibrationTexId_;
     GLint calibrationTexLoc_;
-
-    GLuint brightnessTexId_;
-    GLint brightnessTexLoc_;
 
     GLint inputTex2DLoc_;
     GLint inputTexRectLoc_;

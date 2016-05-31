@@ -38,7 +38,7 @@ namespace omnic {
     UVDBPixel() {
     }
 
-    UVDBPixel(channel_type _u, channel_type _v, channel_type _w, channel_type _b) : 
+    UVDBPixel(channel_type _u, channel_type _v, channel_type _d, channel_type _b) : 
       u_(_u),
       v_(_v),
       d_(_d),

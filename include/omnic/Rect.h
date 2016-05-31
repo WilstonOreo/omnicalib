@@ -33,6 +33,17 @@ namespace omnic {
   /// Rectangle struct for screen and content rectangles
   struct Rect {
   public:
+    Rect(
+        int32_t _offsetX = 0,
+        int32_t _offsetY = 0,
+        uint32_t _width = 0,
+        uint32_t _height = 0) : 
+      offsetX_(_offsetX), 
+      offsetY_(_offsetY),
+      width_(_width),
+      height_(_height) 
+    {}
+
     /// Offset in X direction
     inline int32_t offsetX() const {
       return offsetX_;
@@ -61,6 +72,15 @@ namespace omnic {
       readBinary(_is,offsetY_);
       readBinary(_is,width_);
       readBinary(_is,height_);
+    }
+
+    template<typename STREAM>
+    void save(STREAM& _os, Version = Version::latest()) const {
+      using namespace util;
+      writeBinary(_os,offsetX_);
+      writeBinary(_os,offsetY_);
+      writeBinary(_os,width_);
+      writeBinary(_os,height_);
     }
 
   private:

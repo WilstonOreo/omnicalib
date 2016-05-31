@@ -35,7 +35,7 @@ namespace omnic
   /// Pixel buffer stores matrix with calibration values foreach pixel
   struct PixelData
   {
-    inline static constexpr maxResolution()
+    inline static constexpr size_t maxResolution()
     {
       return 65536;
     }
@@ -69,7 +69,7 @@ namespace omnic
     {
       uint32_t _newWidth = width_ / 2;
       uint32_t _newHeight = height_ / 2;
-      std::vector<UVWPixel> _newData(_newWidth * _newHeight);
+      std::vector<UVDBPixel> _newData(_newWidth * _newHeight);
 
       for (uint32_t y = 0; y < _newHeight; ++y)
       {
@@ -78,7 +78,7 @@ namespace omnic
           uint32_t xx0 = x*2;
           uint32_t yy0 = y*2;
           uint32_t xx1 = xx0+1;
-          uint32_t yy1 = xy0+1;
+          uint32_t yy1 = yy0+1;
 
           if (yy1 >= height_)
           {
@@ -99,7 +99,7 @@ namespace omnic
 
       data_ = _newData;
       width_ = _newWidth;
-      height = _newHeight;
+      height_ = _newHeight;
     }
 
     /// Downsamples the stored buffer n times
@@ -124,12 +124,21 @@ namespace omnic
     template<typename STREAM>
     void load(STREAM& _stream, Version = Version::latest())
     {
+      using namespace util;
       readBinary(_stream,width_);
       readBinary(_stream,height_);
-      cassert(width_ <= maxResolution());
-      cassert(height_ <= maxResolution());
+      assert(width_ <= maxResolution());
+      assert(height_ <= maxResolution());
       data_.resize(width_ * height_);
-      _stream.read(static_cast<char*>(data_.data()),data_.size() * sizeof(UVDBPixel));
+      _stream.read((char*)(data_.data()),data_.size() * sizeof(UVDBPixel));
+    }
+  
+    template<typename STREAM>
+    void save(STREAM& _stream, Version = Version::latest()) const {
+      using namespace util;
+      writeBinary(_stream,width_);
+      writeBinary(_stream,height_);
+      _stream.write((char const*)(data_.data()),data_.size() * sizeof(UVDBPixel));
     }
 
   private:
