@@ -29,26 +29,76 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <omnic/CalibratedProjector.h>
 
 namespace omnic {
+  /// Calibration main struct. Holds a number of calibrated projectors. 
   class Calibration {
   public:
-    Calibration();
+    /// Default, non-changable header size
+    inline static constexpr size_t headerSize() {
+      return 80;
+    }
 
-    void load(std::string const&);
-    void load(std::ostream&);
+    Calibration() {
+      // Set read-only header string
+      std::string header_ = std::string("OMNIC_generated_by_omnidome_v" + std::string(OMNICALIBRATION_VERSION_STRING));
+      header_.resize(headerSize(),' ');
+    }
 
-    std::vector<CalibratedProjector> const& projectors() const;
-  
+    /// Return 
+    template<typename STREAM>
+    inline void load(STREAM& _is, Version _version = Version::current()) {
+      std::string _header(headerSize(),' ');
+      _is.read(header_,headerSize());
+
+      OMNIC_ASSERT(_header == header_);
+      
+      Version _readVersion;
+      _is.read(_is,_readVersion);
+      OMNIC_ASSERT(_readVersion < _version);
+
+      uint32_t _numTunings = 0;
+      readBinary(_is,_numTunings);
+      projectors_.clear();
+      for (uint32_t i = 0; i < _numTunings; ++i) {
+        CalibratedProjector _proj;
+        _proj.load(_is,_version);
+        addCalibratedProjector(_proj);
+      }
+    }
+
+    template<typename STREAM>
+    void save(STREAM& _os, Version _version = Version::current()) const {
+      _os.write(header_.c_str(),headerSize());
+      _version.save(_os);
+      _os << uint32_t(projectors_.size());
+      
+      for (auto& _projector : projectors_) {
+        _projector.save(_os,_version);
+      } 
+    }
+
+    inline std::vector<CalibratedProjector> const& projectors() const {
+      return projectors_;
+    }
+    
+    inline void addCalibratedProjector(CalibratedProjector const& _proj) {
+      projectors_.push_back(_proj);
+    }
+
+    inline void setProjectors(std::vector<CalibratedProjector> const& _proj) {
+      projectors_ = _proj;
+    }
+
+    inline std::string const& header() const {
+      return header_;
+    }
+
+
   private:
-
     /// Header string
-    std::string header[80];
-
-    /**@brief Calibration content type
-     **@detail 0 = UV coords, 1 = UVW coords
-     **/
-    uint32_t content_type;
+    std::string header_;
 
     /// List of calibrated projectors
     std::vector<CalibratedProjector> projectors_;

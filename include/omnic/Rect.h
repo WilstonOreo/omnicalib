@@ -58,15 +58,25 @@ namespace omnic {
     inline uint32_t width() const {
       return width_;
     }
+    
+    /// Set width of rectangle
+    inline void setWidth(uint32_t _width) {
+      width_ = _width;
+    }
 
     /// Height of rectangle
     inline uint32_t height() const {
       return height_;
     }
     
+    /// Set width of rectangle
+    inline void setHeight(uint32_t _height) {
+      height_ = _height;
+    }
+ 
     /// Load rectangle from stream
     template<typename STREAM>
-    void load(STREAM& _is, Version = Version::latest()) {
+    void load(STREAM& _is, Version = Version::current()) {
       using namespace util;
       readBinary(_is,offsetX_);
       readBinary(_is,offsetY_);
@@ -75,7 +85,7 @@ namespace omnic {
     }
 
     template<typename STREAM>
-    void save(STREAM& _os, Version = Version::latest()) const {
+    void save(STREAM& _os, Version = Version::current()) const {
       using namespace util;
       writeBinary(_os,offsetX_);
       writeBinary(_os,offsetY_);

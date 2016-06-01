@@ -29,9 +29,9 @@
 #ifndef OMNIC_COLORCORRECTIONLOT_H_
 #define OMNIC_COLORCORRECTIONLOT_H_
 
-#include <cassert>
 #include <vector>
 #include <omnic/util.h>
+#include <omnic/Version.h>
 
 namespace omnic {
   /// Color correction information
@@ -79,39 +79,50 @@ namespace omnic {
   /// Look up table for color correction
   struct ColorCorrectionLOT {
 
+    /// Maximum size of look up table
     inline static constexpr size_t maxSize() { return 65536; }
+    
+    /// Minimum size of look up table
     inline static constexpr size_t minSize() { return 256; }
+    
+    /// Default size of look up table
     inline static constexpr size_t defaultSize() { return 1024; }
 
+    /// Default size of look up table
     inline uint32_t size() const {
       return data_.size();
     }
 
+    /// Return pointer to data
     inline const void* ptr() const {
       return (void const*)data_.data();
     }
 
+    /// Return data as vector
     inline std::vector<ColorCorrectionInfo> const& data() const {
       return data_;
     }
 
+    /// Set data from input container
     template<typename T>
     void setData(T const& _data) {
       data_ = _data;
     }
 
+    /// Save lookup table data to stream
     template<typename STREAM>
-    void save(STREAM& _os, Version = Version::latest()) const {
+    void save(STREAM& _os, Version = Version::current()) const {
       util::writeBinary(_os,uint32_t(data_.size()));
       _os.write((char const*)(data_.data()),data_.size() * sizeof(ColorCorrectionInfo));
     }
 
+    /// Load lookup table data from stream
     template<typename STREAM>
-    void load(STREAM& _is, Version = Version::latest()) {
+    void load(STREAM& _is, Version = Version::current()) {
       using namespace util;
       uint32_t size_ = 0;
       readBinary(_is,size_);
-      assert(size_ <= maxSize());
+      OMNIC_ASSERT(size_ <= maxSize());
       data_.resize(size_);
       _is.read((char*)(data_.data()),data_.size() * sizeof(ColorCorrectionInfo));
     }

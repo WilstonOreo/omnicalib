@@ -26,41 +26,31 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef OMNIC_UTIL_H_
-#define OMNIC_UTIL_H_
+#ifndef OMNIC_GL_FUNCTIONS_H_
+#define OMNIC_GL_FUNCTIONS_H_
 
-#if DEBUG
-#include <cassert>
-#define OMNIC_ASSERT(TXT) assert(TXT)
-#elif 
-#define OMNIC_ASSERT(TXT)
-#endif
+#include <omnic/gl/types.h>
 
-
-namespace omnic {
-  namespace util {
-    /// Read binary encoded value from stream (e.g. std::istream)
-    template<typename STREAM, typename T>
-    void readBinary(STREAM& _stream, T& _v) {
-      constexpr size_t _size = sizeof(T);
-      _stream.read(reinterpret_cast<char*>(_v),_size);
-    }
+namespace omnic
+{
+  namespace gl
+  {
+    template<GLuint FORMAT, typename T>
+    void texImage2D(GLuint _target, int _width, int _height, void const* _ptr = nullptr) {
+       glTexImage2D(_target, 0, gl::PixelTypeId<FORMAT,T>::typeId(),
+                _width,
+                _height, 0,
+        FORMAT, gl::TypeId<T>::typeId(), _ptr);
+      }
     
-    /// Write binary encoded value to stream (e.g. std::ostream)
-    template<typename STREAM, typename T>
-    void writeBinary(STREAM& _stream, T const& _v) {
-      constexpr size_t _size = sizeof(T);
-      _stream.write((char*)(&_v),_size);
-    }
-   
-    /// Clamp copy of value between min and max value and return clampled value
-    template<typename T>
-    T clamp(T const& _value, T const& _min, T const& _max) {
-      if (_value < _min) { return _min; }
-      if (_value > _max) { return _max; }
-      return _value;
-    }
+    template<GLuint FORMAT, typename T, typename BUF>
+    void texImage2D(GLuint _target, BUF const& _buf) {
+       glTexImage2D(_target, 0, gl::PixelTypeId<FORMAT,T>::typeId(),
+                traits::width(_buf),
+                traits::height(_buf), 0,
+        FORMAT, gl::TypeId<T>::typeId(), traits::ptr(_buf));
+      }
   }
 }
 
-#endif /* OMNIC_UTIL_H_ */
+#endif /* OMNIC_GL_FUNCTIONS_H_ */

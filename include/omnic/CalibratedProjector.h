@@ -34,10 +34,18 @@
 #include "ColorCorrectionLOT.h"
 
 namespace omnic {
+  /// Data structure for calibrated projector
   class CalibratedProjector {
   public:
+    /// Return flag if projector has a virtual screen assigned
     inline bool virtualScreen() const {
       return screenInfo_ & 1; // Virtual screen is first bit
+    }
+
+    /// Set virtual screen
+    inline void setVirtualScreen(bool _virtualScreen) {
+      screenInfo_ &= 0xFFFFFFFE;
+      screenInfo_ |= _virtualScreen; 
     }
 
     /// Rectangle representing the screen geometry
@@ -45,25 +53,46 @@ namespace omnic {
       return screenGeometry_;
     }
     
+    /// Set screen geometry
+    inline void setScreenGeometry(Rect const& _screenGeometry) {
+      screenGeometry_ = _screenGeometry;
+    }
+    
     /// Rectangle representing the content placement inside the screen
     inline Rect const& contentGeometry() const {
       return contentGeometry_;
     }
-
-    inline PixelData const& pixelData() const {
-      return pixelData_;
+    
+    /// Set Content  geometry
+    inline void setContentGeometry(Rect const& _contentGeometry) {
+      contentGeometry_ = _contentGeometry;
     }
 
+    /// Return color correction look up table
     inline ColorCorrectionLOT const& colorCorrection() const {
       return colorCorrection_;
     }
+
+    /// Set new color correction look up table
+    inline void setColorCorrection(ColorCorrectionLOT const& _colorCorrection) {
+      colorCorrection_ = _colorCorrection;
+    }
+
+    /// Return pixel data
+    inline PixelData const& pixelData() const {
+      return pixelData_;
+    }
     
+    /// Set pixel data
+    inline void setPixelData(PixelData const& _pixelData) {
+      pixelData_ = _pixelData;
+    }
+
     /// Load from stream
     template<typename STREAM>
-    inline void load(STREAM& _is, Version _version = Version::latest())
+    void load(STREAM& _is, Version _version = Version::current())
     {
       using namespace util;
-      uint32_t screenInfo_ = 0;
       readBinary(_is,screenInfo_);
       screenGeometry_.load(_is,_version);
       contentGeometry_.load(_is,_version);
@@ -73,15 +102,14 @@ namespace omnic {
     
     /// Save to stream
     template<typename STREAM>
-    inline void save(STREAM& _is, Version _version = Version::latest()) const
+    void save(STREAM& _os, Version _version = Version::current()) const
     {
       using namespace util;
-      uint32_t screenInfo_ = 0;
-      writeBinary(_is,screenInfo_);
-      screenGeometry_.save(_is,_version);
-      contentGeometry_.save(_is,_version);
-      colorCorrection_.save(_is,_version);
-      pixelData_.save(_is,_version);
+      writeBinary(_os,screenInfo_);
+      screenGeometry_.save(_os,_version);
+      contentGeometry_.save(_os,_version);
+      colorCorrection_.save(_os,_version);
+      pixelData_.save(_os,_version);
     }
 
   private:
