@@ -33,8 +33,8 @@
 #include <cassert>
 #define OMNIC_ASSERT(TXT) assert(TXT)
 #define OMNIC_DEBUG() std::cerr << __FILE__ << ":" << __FUNCTION__ << ":" << __LINE__ << ":\t" 
-#elif 
-#define OMNIC_ASSERT(TXT)
+#else
+#define OMNIC_ASSERT(TXT) ((void)0)
 #define OMNIC_DEBUG()
 #endif
 

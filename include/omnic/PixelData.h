@@ -159,8 +159,8 @@ namespace omnic
       using namespace util;
       readBinary(_stream,width_);
       readBinary(_stream,height_);
-      assert(width_ <= maxResolution());
-      assert(height_ <= maxResolution());
+      OMNIC_ASSERT(width_ <= maxResolution());
+      OMNIC_ASSERT(height_ <= maxResolution());
       data_.resize(width_ * height_);
       _stream.read((char*)(data_.data()),data_.size() * sizeof(UVDBPixel));
     }
