@@ -28,6 +28,7 @@
 #define OMNIC_RECT_H_
 
 #include "util.h"
+#include <omnic/Version.h>
 
 namespace omnic {
   /// Rectangle struct for screen and content rectangles
@@ -84,6 +85,7 @@ namespace omnic {
       readBinary(_is,height_);
     }
 
+    /// Save rectangle to stream
     template<typename STREAM>
     void save(STREAM& _os, Version = Version::current()) const {
       using namespace util;
@@ -93,6 +95,17 @@ namespace omnic {
       writeBinary(_os,height_);
     }
 
+    /// Test for equality 
+    inline friend bool operator==(
+        Rect const& _lhs, 
+        Rect const& _rhs) {
+      return 
+        (_lhs.offsetX_ == _rhs.offsetX_) &&
+        (_lhs.offsetY_ == _rhs.offsetY_) &&
+        (_lhs.width_ == _lhs.width_) &&
+        (_lhs.height_ == _rhs.height_);
+    }
+  
   private:
     int32_t offsetX_;
     int32_t offsetY_;

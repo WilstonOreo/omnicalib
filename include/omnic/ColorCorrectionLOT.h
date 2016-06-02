@@ -68,6 +68,18 @@ namespace omnic {
     inline value_type all() const {
       return all_;
     }
+    
+    /// Test for equality 
+    friend bool operator==(
+        ColorCorrectionInfo const& _lhs, 
+        ColorCorrectionInfo const& _rhs) {
+      return 
+        (_lhs.red_ == _rhs.red_) &&
+        (_lhs.green_ == _rhs.green_) &&
+        (_lhs.blue_ == _rhs.blue_) &&
+        (_lhs.all_ == _rhs.all_);
+        ;
+    }
 
   private:
     float red_;
@@ -78,6 +90,7 @@ namespace omnic {
 
   /// Look up table for color correction
   struct ColorCorrectionLOT {
+    typedef std::vector<ColorCorrectionInfo> data_type;
 
     /// Maximum size of look up table
     inline static constexpr size_t maxSize() { return 65536; }
@@ -120,15 +133,22 @@ namespace omnic {
     template<typename STREAM>
     void load(STREAM& _is, Version = Version::current()) {
       using namespace util;
-      uint32_t size_ = 0;
-      readBinary(_is,size_);
-      OMNIC_ASSERT(size_ <= maxSize());
-      data_.resize(size_);
+      uint32_t _size = 0;
+      readBinary(_is,_size);
+      OMNIC_ASSERT(_size <= maxSize());
+      data_.resize(_size);
       _is.read((char*)(data_.data()),data_.size() * sizeof(ColorCorrectionInfo));
+    }
+    
+    /// Test for equality 
+    friend bool operator==(
+        ColorCorrectionLOT const& _lhs, 
+        ColorCorrectionLOT const& _rhs) {
+      return (_lhs.data_ == _rhs.data_);
     }
 
   private:
-    std::vector<ColorCorrectionInfo> data_;
+    data_type data_;
   };
 }
 

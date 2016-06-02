@@ -74,7 +74,19 @@ namespace omnic {
           (_x00.v() + _x01.v() + _x10.v() + _x11.v()) / 4,
           calculateDepthValue(_x00,_x01,_x10,_x11),
           (_x00.b() + _x01.b() + _x10.b() + _x11.b()) / 4);
-      }
+    }
+
+    /// Test for equality 
+    inline friend bool operator==(
+        UVDBPixel const& _lhs, 
+        UVDBPixel const& _rhs) {
+      return 
+        (_lhs.u_ == _rhs.u_) &&
+        (_lhs.v_ == _rhs.v_) &&
+        (_lhs.d_ == _rhs.d_) &&
+        (_lhs.b_ == _rhs.b_);
+    }
+
 
   private:
     inline static channel_type calculateDepthValue(

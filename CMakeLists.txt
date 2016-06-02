@@ -33,3 +33,9 @@ LIST(APPEND QT_MODULES "OpenGL")
 
 ########### BUILD_TARGETS ############
 
+enable_testing()
+
+add_executable(Serialization src/test/Serialization.cpp )
+
+add_test(Serialization Serialization)
+

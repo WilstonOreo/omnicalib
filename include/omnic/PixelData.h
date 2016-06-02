@@ -28,7 +28,8 @@
 #define OMNIC_PIXELBUFFER_H_
 
 #include <vector>
-#include "UVDBPixel.h"
+#include <omnic/Version.h>
+#include <omnic/UVDBPixel.h>
 
 namespace omnic
 {
@@ -39,7 +40,7 @@ namespace omnic
 
     PixelData() {}
 
-    PixelData(uint32_t _width, uint32_t _height, data_type const& _data) : 
+    PixelData(uint32_t _width, uint32_t _height, data_type const& _data = data_type()) : 
       width_(_width),
       height_(_height),
       data_(_data) {
@@ -90,7 +91,7 @@ namespace omnic
     }
 
     /// Return vector of stored pixel values
-    inline std::vector<UVDBPixel> const& data() const
+    inline data_type const& data() const
     {
       return data_;
     }
@@ -100,7 +101,7 @@ namespace omnic
     {
       uint32_t _newWidth = width_ / 2;
       uint32_t _newHeight = height_ / 2;
-      std::vector<UVDBPixel> _newData(_newWidth * _newHeight);
+      data_type _newData(_newWidth * _newHeight);
 
       for (uint32_t y = 0; y < _newHeight; ++y)
       {
@@ -164,6 +165,7 @@ namespace omnic
       _stream.read((char*)(data_.data()),data_.size() * sizeof(UVDBPixel));
     }
   
+    /// Save to stream
     template<typename STREAM>
     void save(STREAM& _stream, Version = Version::current()) const {
       using namespace util;
@@ -172,10 +174,20 @@ namespace omnic
       _stream.write((char const*)(data_.data()),data_.size() * sizeof(UVDBPixel));
     }
 
+    /// Test for equality 
+    inline friend bool operator==(
+        PixelData const& _lhs, 
+        PixelData const& _rhs) {
+      return 
+        (_lhs.width_ == _rhs.width_) &&
+        (_lhs.height_ == _rhs.height_) &&
+        (_lhs.data_ == _rhs.data_);
+    }
+
   private:
     uint32_t width_ = 0;
     uint32_t height_ = 0;
-    std::vector<UVDBPixel> data_;
+    data_type data_;
   };
 }
 

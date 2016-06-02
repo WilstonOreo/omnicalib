@@ -29,6 +29,8 @@
 #ifndef OMNIC_GL_TYPES_H_
 #define OMNIC_GL_TYPES_H_
 
+#include <vector>
+
 #if OMNIC_USE_QT_GL
 // Use Qt QOpenGLFunctions when USE_QT_GL is enable
 #include <QOpenGLFunctions>
@@ -111,6 +113,30 @@ namespace omnic
         template<typename BUF>
         void const* operator()(BUF const& _buf) {
           return _buf.ptr();
+        }
+      };
+      
+      template<typename T>
+      struct Width<std::vector<T>> {
+        template<typename BUF>
+        int operator()(BUF const& _buf) {
+          return _buf.size();
+        }
+      };
+      
+      template<typename T>
+      struct Height<std::vector<T>> {
+        template<typename BUF>
+        int operator()(BUF const&) {
+          return 1;
+        }
+      };
+
+      template<typename T>
+      struct Ptr<std::vector<T>> {
+        template<typename BUF>
+        void const* operator()(BUF const& _buf) {
+          return (void const*)_buf.data();
         }
       };
 

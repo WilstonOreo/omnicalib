@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <omnic/util.h>
 #include <omnic/CalibratedProjector.h>
 
 namespace omnic {
@@ -46,17 +47,25 @@ namespace omnic {
       header_.resize(headerSize(),' ');
     }
 
-    /// Return 
+    /// Load calibration from stream
     template<typename STREAM>
     inline void load(STREAM& _is, Version _version = Version::current()) {
-      std::string _header(headerSize(),' ');
-      _is.read(header_,headerSize());
-
-      OMNIC_ASSERT(_header == header_);
+      using namespace util;
       
+      char _header[headerSize()];
+      for (size_t i = 0; i < headerSize(); ++i) {
+        _header[i] = ' ';
+      }
+      _is.read(_header,headerSize());
+
+      /// First five letters of header must be equal
+      OMNIC_ASSERT(std::string(_header).substr(0,5) == header_.substr(0,5));
+     
+
       Version _readVersion;
-      _is.read(_is,_readVersion);
-      OMNIC_ASSERT(_readVersion < _version);
+      _readVersion.load(_is);
+      
+      OMNIC_ASSERT(_version <= _readVersion);
 
       uint32_t _numTunings = 0;
       readBinary(_is,_numTunings);
@@ -68,33 +77,46 @@ namespace omnic {
       }
     }
 
+    /// Save calibration to stream
     template<typename STREAM>
     void save(STREAM& _os, Version _version = Version::current()) const {
+      using namespace util;
+
       _os.write(header_.c_str(),headerSize());
       _version.save(_os);
-      _os << uint32_t(projectors_.size());
-      
+      writeBinary(_os,uint32_t(projectors_.size())); 
+
       for (auto& _projector : projectors_) {
         _projector.save(_os,_version);
       } 
     }
 
+    /// Return list of calibrated projectors
     inline std::vector<CalibratedProjector> const& projectors() const {
       return projectors_;
     }
     
+    /// Append a calibrated projector
     inline void addCalibratedProjector(CalibratedProjector const& _proj) {
       projectors_.push_back(_proj);
     }
 
+    /// Set projectors
     inline void setProjectors(std::vector<CalibratedProjector> const& _proj) {
       projectors_ = _proj;
     }
 
+    /// Return read-only header
     inline std::string const& header() const {
       return header_;
     }
 
+    /// Test for equality 
+    friend bool operator==(Calibration const& _lhs, Calibration const& _rhs) {
+      return 
+        (_lhs.header_ == _rhs.header_) &&
+        (_lhs.projectors_ == _rhs.projectors_);
+    }
 
   private:
     /// Header string

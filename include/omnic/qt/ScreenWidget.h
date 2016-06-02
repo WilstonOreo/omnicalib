@@ -25,45 +25,36 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#ifndef OMNIC_QT_SCREENWIDGET_H_
+#define OMNIC_QT_SCREENWIDGET_H_
 
-#ifndef OMNIC_UTIL_H_
-#define OMNIC_UTIL_H_
-
-#if DEBUG
-#include <cassert>
-#define OMNIC_ASSERT(TXT) assert(TXT)
-#define OMNIC_DEBUG() std::cerr << __FILE__ << ":" << __FUNCTION__ << ":" << __LINE__ << ":\t" 
-#elif 
-#define OMNIC_ASSERT(TXT)
-#define OMNIC_DEBUG()
-#endif
-
+#include <QOpenGLWidget>
+#include <omnic/util.h>
+#include 
 
 namespace omnic {
-  namespace util {
-    /// Read binary encoded value from stream (e.g. std::istream)
-    template<typename STREAM, typename T>
-    void readBinary(STREAM& _stream, T& _v) {
-      constexpr size_t _size = sizeof(T);
-      _stream.read((char*)(&_v),_size);
-    }
-    
-    /// Write binary encoded value to stream (e.g. std::ostream)
-    template<typename STREAM, typename T>
-    void writeBinary(STREAM& _stream, T const& _v) {
-      constexpr size_t _size = sizeof(T);
-      _stream.write((char*)(&_v),_size);
-    }
-   
-    /// Clamp copy of value between min and max value and return clampled value
-    template<typename T>
-    T clamp(T const& _value, T const& _min, T const& _max) {
-      if (_value < _min) { return _min; }
-      if (_value > _max) { return _max; }
-      return _value;
-    }
-  } 
+  namespace qt {
+    class ScreenWidget : public QOpenGLWidget {
+      Q_OBJECT
+    public:
+      explicit ScreenWidget(QWidget *_parent = nullptr);
+      virtual ~ScreenWidget();
+
+      omnic::Rect const& screenGeometry();
+      bool isVirtual() const;
+
+      void addCalibratedProjector(omnic::CalibratedProjector const&);
+
+
+
+    private:
+      omnic::Rect screenGeometry_;
+
+      std::vector<gl::Renderer> renderers_;
+    };
+  }
 }
 
-#endif /* OMNIC_UTIL_H_ */
+#endif /* OMNIC_QT_SCREENWIDGET_H_ */
+
 

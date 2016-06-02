@@ -25,45 +25,38 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#ifndef OMNIC_QT_OUTPUT_H_
+#define OMNIC_QT_OUTPUT_H_ 
 
-#ifndef OMNIC_UTIL_H_
-#define OMNIC_UTIL_H_
-
-#if DEBUG
-#include <cassert>
-#define OMNIC_ASSERT(TXT) assert(TXT)
-#define OMNIC_DEBUG() std::cerr << __FILE__ << ":" << __FUNCTION__ << ":" << __LINE__ << ":\t" 
-#elif 
-#define OMNIC_ASSERT(TXT)
-#define OMNIC_DEBUG()
-#endif
-
+#include <vector>
+#include <QObject>
+#include <omnic/qt/ScreenWidget.h>
 
 namespace omnic {
-  namespace util {
-    /// Read binary encoded value from stream (e.g. std::istream)
-    template<typename STREAM, typename T>
-    void readBinary(STREAM& _stream, T& _v) {
-      constexpr size_t _size = sizeof(T);
-      _stream.read((char*)(&_v),_size);
-    }
+  namespace qt {
+    /// This class manages all screen output widgets for a calibration
+    class Output : public QObject {
+      Q_OBJECT
+    public:
+      Output();
+      ~Output();
+
+      void showVirtualScreens();
+      void hideVirtualScreens();
     
-    /// Write binary encoded value to stream (e.g. std::ostream)
-    template<typename STREAM, typename T>
-    void writeBinary(STREAM& _stream, T const& _v) {
-      constexpr size_t _size = sizeof(T);
-      _stream.write((char*)(&_v),_size);
-    }
-   
-    /// Clamp copy of value between min and max value and return clampled value
-    template<typename T>
-    T clamp(T const& _value, T const& _min, T const& _max) {
-      if (_value < _min) { return _min; }
-      if (_value > _max) { return _max; }
-      return _value;
-    }
-  } 
+      void setCalibration(omnic::Calibration const&);
+      omnic::Calibration const& calibration();
+
+      void setTextureId(GLuint _widget);
+
+      /// Update all widgets
+      void update();
+
+    private:
+      omnic::Calibration calibration_;
+      std::vector<QUniquePtr<ScreenWidget>> widgets_;
+    };
+  }
 }
 
-#endif /* OMNIC_UTIL_H_ */
-
+#endif /* OMNIC_QT_OUTPUT_H_ */

@@ -77,6 +77,16 @@ namespace omnic {
     {
       return lhs.id() < rhs.id();
     }
+    
+    friend bool operator <=(const Version& lhs, const Version& rhs) //friend claim has to be here
+    {
+      return (lhs < rhs) || (lhs == rhs);
+    }
+    
+    friend bool operator ==(const Version& lhs, const Version& rhs) //friend claim has to be here
+    {
+      return lhs.id() == rhs.id();
+    }
 
     /// Major version
     inline uint32_t major() const {

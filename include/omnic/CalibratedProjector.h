@@ -112,6 +112,19 @@ namespace omnic {
       pixelData_.save(_os,_version);
     }
 
+    /// Test for equality 
+    inline friend bool operator==(
+        CalibratedProjector const& _lhs, 
+        CalibratedProjector const& _rhs) {
+      return 
+        (_lhs.screenInfo_ == _rhs.screenInfo_) &&
+        (_lhs.screenGeometry_ == _rhs.screenGeometry_) &&
+        (_lhs.contentGeometry_ == _lhs.contentGeometry_) &&
+        (_lhs.colorCorrection_ == _rhs.colorCorrection_) &&
+        (_lhs.pixelData_ == _rhs.pixelData_)
+        ;
+    }
+  
   private:
     uint32_t screenInfo_ = 0;
     Rect screenGeometry_;
