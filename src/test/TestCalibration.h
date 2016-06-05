@@ -32,9 +32,9 @@ namespace omnic {
   /// Generate artificial sample calibration for testing
   static Calibration testCalibration() {
     Calibration _calib;
-    
+
     auto _generateProjector = [&_calib](
-        Rect const& _screenGeometry, 
+        Rect const& _screenGeometry,
         Rect const& _contentGeometry) -> CalibratedProjector {
       CalibratedProjector _proj;
       _proj.setVirtualScreen(true);
@@ -46,7 +46,7 @@ namespace omnic {
       _proj.setScreenGeometry(_screenGeometry);
 
       PixelData::data_type _data(_w*_h);
-      for (uint32_t y = 0; y < _h; ++y) 
+      for (uint32_t y = 0; y < _h; ++y)
         for (uint32_t x = 0; x < _w; ++x) {
           _data[y*_w + x] = UVDBPixel(x * 65536.0 / _w, y * 65536.0 / _h,0,x * 65536.0 / _w);
         }
@@ -59,8 +59,8 @@ namespace omnic {
 
       size_t _size = ColorCorrectionLOT::defaultSize();
       for (size_t i = 0; i < _size; ++i) {
-        float _v = i * 65536.0 / _size;
-        _data.emplace_back(_v,_v,_v,_v);
+        float _v = i / float(_size);
+        _ccData.emplace_back(_v,_v,_v,_v);
       }
 
       _colorCorrection.setData(_ccData);
@@ -70,20 +70,17 @@ namespace omnic {
     };
 
     _calib.addCalibratedProjector(_generateProjector(
-          Rect(0,0,1920,1080), 
+          Rect(0,0,1920,1080),
           Rect(0,0,1920,1080)));
 
     _calib.addCalibratedProjector(_generateProjector(
-          Rect(1920,0,1920,1080), 
+          Rect(1920,0,1920,1080),
           Rect(0,0,960,1080)));
-    
+
     _calib.addCalibratedProjector(_generateProjector(
-          Rect(1920,0,1920,1080), 
+          Rect(1920,0,1920,1080),
           Rect(960,0,960,1080)));
 
     return _calib;
   }
 }
-
-
-

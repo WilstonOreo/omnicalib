@@ -64,23 +64,23 @@ namespace omnic
 
           glDeleteShader(_vertexShaderId);
           glDeleteShader(_fragmentShaderId);
-        
+
           // Get uniforms
-           colorCorrectionTexLoc_ = glGetUniformLocation(programId_,"color_correction");
-           colorCorrectionTexWidthLoc_ = glGetUniformLocation(programId_,"color_correction_width"); 
-           colorCorrectionTexHeightLoc_ = glGetUniformLocation(programId_,"color_correction_height"); 
-           
-           calibrationTexLoc_ = glGetUniformLocation(programId_,"calibration_tex"); 
-           calibrationTexWidthLoc_ = glGetUniformLocation(programId_,"calibration_width"); 
-           calibrationTexHeightLoc_ = glGetUniformLocation(programId_,"calibration_height"); 
+           colorCorrectionTexLoc_ = glGetUniformLocation(programId_,"colorcorrection");
+           colorCorrectionTexWidthLoc_ = glGetUniformLocation(programId_,"colorcorrection_width");
+           colorCorrectionTexHeightLoc_ = glGetUniformLocation(programId_,"colorcorrection_height");
+
+           calibrationTexLoc_ = glGetUniformLocation(programId_,"calibration");
+           calibrationTexWidthLoc_ = glGetUniformLocation(programId_,"calibration_width");
+           calibrationTexHeightLoc_ = glGetUniformLocation(programId_,"calibration_height");
 
            inputTex2DLoc_ = glGetUniformLocation(programId_,"input_2d");
            inputTexRectLoc_ = glGetUniformLocation(programId_,"input_rect");
            inputWidthLoc_ = glGetUniformLocation(programId_,"input_width");
-           inputHeightLoc_ = glGetUniformLocation(programId_,"input_height"); 
+           inputHeightLoc_ = glGetUniformLocation(programId_,"input_height");
         }
 
-        auto& _colorCorrectionLookUp = _proj.colorCorrectionLookUp();        
+        auto& _colorCorrectionLookUp = _proj.colorCorrectionLookUp();
         colorCorrectionTex_.initialize(_colorCorrectionLookUp.data(),GL_TEXTURE_1D);
         calibrationTex_.initialize(_proj.pixelData(),GL_TEXTURE_RECT);
 
@@ -154,7 +154,7 @@ namespace omnic
       Rect viewportRect_;
 
       TextureRGBA32F colorCorrectionTex_;
-      
+
       GLuint colorCorrectionTexId_;
       GLint colorCorrectionTexLoc_;
       GLint colorCorrectionTexWidth_;
@@ -174,4 +174,3 @@ namespace omnic
 }
 
 #endif /* OMNIC_GL_RENDERER_H_ */
-
