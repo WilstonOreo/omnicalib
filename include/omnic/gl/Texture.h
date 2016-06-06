@@ -30,6 +30,7 @@
 #define OMNIC_GL_TEXTURE_H_
 
 #include <omnic/gl/functions.h>
+#include <omnic/gl/TextureRef.h>
 
 namespace omnic {
   namespace gl {
@@ -67,65 +68,63 @@ namespace omnic {
           initializeOpenGLFunctions();
 #endif
         destroy();
-        target_ = _target;
-        width_ = _buf.width();
-        height_ = _buf.height();
 
-        glGenTextures(1, &texId_);
+        GLuint _texId;
+        glGenTextures(1, &_texId);
+        tex_ = TextureRef(_texId,traits::width(_buf),traits::height(_buf),_target);
+
         bind();
         {
-          glTexParameteri(target_, GL_TEXTURE_WRAP_S,     GL_CLAMP_TO_EDGE);
-          glTexParameteri(target_, GL_TEXTURE_WRAP_T,     GL_CLAMP_TO_EDGE);
-          glTexParameteri(target_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri(target_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-          gl::texImage2D<format(),type>(target_,size_,_buf.ptr());
+          glTexParameteri(target(), GL_TEXTURE_WRAP_S,     GL_CLAMP_TO_EDGE);
+          glTexParameteri(target(), GL_TEXTURE_WRAP_T,     GL_CLAMP_TO_EDGE);
+          glTexParameteri(target(), GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexParameteri(target(), GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+          gl::texImage2D<format(),type>(target(),width(),height(),traits::ptr(_buf));
         }
         release();
       }
 
       /// Destroy texture and set internal tex ID to 0
       void destroy() {
-        if (texId_ != 0) {
-          glDeleteTextures(1, &texId_);
-          texId_ = 0;
+        auto _texId = tex_.id();
+        if (_texId != 0) {
+          glDeleteTextures(1, &_texId);
+          tex_ = TextureRef();
         } 
       }
 
       /// Bind texture with glBindTexture(target,texId)
       void bind() {
-        glBindTexture(target_, texId_);
+        glBindTexture(target(), textureId());
       }
 
       /// Release texture with glBindTexture(target,0)
       void release() {
-        glBindTexture(target_, 0);
+        glBindTexture(target(), 0);
       }
 
-      /// Return GL_TEXTURE_2D or GL_TEXTURE_RECTANGLE
+      /// Return target (e.g. GL_TEXTURE_2D or GL_TEXTURE_RECTANGLE)
       GLuint target() const {
-        return target_;
+        return tex_.target();
       }
 
       /// Return id of this texture
       GLuint textureId() const {
-        return texId_;
+        return tex_.id();
       }
 
       /// Return width of texture
-      int width() const {
-        return size_;
+      uint32_t width() const {
+        return tex_.width();
       }
       
       /// Return width of texture
-      int height() const {
-        return size_;
+      uint32_t height() const {
+        return tex_.height();
       }
 
     private:
-      int width_ = 0 ;
-      int height_ = 0 ;
-      GLuint target_ = GL_TEXTURE_2D;
-      GLuint texId_ = 0;
+      TextureRef tex_;
     };
 
     typedef Texture<GL_RGBA,GLfloat> TextureRGBA32F;

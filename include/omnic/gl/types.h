@@ -32,7 +32,7 @@
 #include <vector>
 
 #if OMNIC_USE_QT_GL
-// Use Qt QOpenGLFunctions when USE_QT_GL is enable
+// Use Qt QOpenGLFunctions when USE_QT_GL is enabled
 #include <QOpenGLFunctions>
 #define OMNIC_GL_INHERIT_QT_OPENGLFUNCTIONS : protected QOpenGLFunctions
 #else
@@ -49,7 +49,6 @@
 
 #define OMNIC_GL_INHERIT_QT_OPENGLFUNCTIONS 
 #endif
-
 
 
 namespace omnic

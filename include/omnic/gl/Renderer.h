@@ -29,6 +29,9 @@
 #define OMNIC_GL_RENDERER_H_
 
 #include <omnic/gl/Texture.h>
+#include <omnic/gl/TextureRef.h>
+#include <omnic/gl/shader.h>
+#include <omnic/CalibratedProjector.h>
 
 namespace omnic
 {
@@ -38,12 +41,12 @@ namespace omnic
     {
     public:
       Renderer() {}
-      Renderer(CalibratedProjector& _proj)
+      Renderer(CalibratedProjector const& _proj)
       {
-        init(_proj);
+        initialize(_proj);
       }
 
-      void initialize(CalibratedProjector const& _proj)
+      inline void initialize(CalibratedProjector const& _proj)
       {
 #if OMNIC_USE_QT_GL
         initializeOpenGLFunctions();
@@ -56,34 +59,41 @@ namespace omnic
           GLint _vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
           GLint _fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
 
-          glCompileShader(VertexShaderObject);
-          glCompileShader(FragmentShaderObject);
+          const char* _vertexSrc = std::string(CalibrationFragmentShader_120).c_str();
+          const char* _fragmentSrc = std::string(CalibrationFragmentShader_120).c_str();
 
-          glAttachShader(programId_, VertexShaderObjecti);
-          glAttachShader(programId_, FragmentShaderObject);
+          glShaderSource(_vertexShaderId,1,&_vertexSrc,NULL);
+          glShaderSource(_fragmentShaderId,1,&_fragmentSrc,NULL);
+
+          glCompileShader(_vertexShaderId);
+          glCompileShader(_fragmentShaderId);
+
+          glAttachShader(programId_, _vertexShaderId);
+          glAttachShader(programId_, _fragmentShaderId);
+          
+          glLinkProgram(programId_);
 
           glDeleteShader(_vertexShaderId);
           glDeleteShader(_fragmentShaderId);
 
           // Get uniforms
-           colorCorrectionTexLoc_ = glGetUniformLocation(programId_,"colorcorrection");
-           colorCorrectionTexWidthLoc_ = glGetUniformLocation(programId_,"colorcorrection_width");
-           colorCorrectionTexHeightLoc_ = glGetUniformLocation(programId_,"colorcorrection_height");
+          colorCorrectionTexLoc_ = glGetUniformLocation(programId_,"colorcorrection");
 
-           calibrationTexLoc_ = glGetUniformLocation(programId_,"calibration");
-           calibrationTexWidthLoc_ = glGetUniformLocation(programId_,"calibration_width");
-           calibrationTexHeightLoc_ = glGetUniformLocation(programId_,"calibration_height");
+          pixeldataTexLoc_ = glGetUniformLocation(programId_,"pixeldata");
+          pixeldataTexWidthLoc_ = glGetUniformLocation(programId_,"pixeldata_width");
+          pixeldataTexHeightLoc_ = glGetUniformLocation(programId_,"pixeldata_height");
 
-           inputTex2DLoc_ = glGetUniformLocation(programId_,"input_2d");
-           inputTexRectLoc_ = glGetUniformLocation(programId_,"input_rect");
-           inputWidthLoc_ = glGetUniformLocation(programId_,"input_width");
-           inputHeightLoc_ = glGetUniformLocation(programId_,"input_height");
+          inputTex2DLoc_ = glGetUniformLocation(programId_,"input_2d");
+          inputUseRectLoc_ = glGetUniformLocation(programId_,"input_use_rect");
+          inputTexRectLoc_ = glGetUniformLocation(programId_,"input_rect");
+          inputWidthLoc_ = glGetUniformLocation(programId_,"input_width");
+          inputHeightLoc_ = glGetUniformLocation(programId_,"input_height");
         }
 
-        auto& _colorCorrectionLookUp = _proj.colorCorrectionLookUp();
+        auto& _colorCorrectionLookUp = _proj.colorCorrection();
         colorCorrectionTex_.initialize(_colorCorrectionLookUp.data(),GL_TEXTURE_1D);
-        calibrationTex_.initialize(_proj.pixelData(),GL_TEXTURE_RECT);
 
+        pixeldataTex_.initialize(_proj.pixelData(),GL_TEXTURE_RECTANGLE);
       }
 
       inline bool isInitialized() const
@@ -95,76 +105,97 @@ namespace omnic
         GLuint _inputTexId,
         GLuint _inputWidth,
         GLuint _inputHeight,
-        GLuint _target = GL_TEXTURE_RECT) const
+        GLuint _target = GL_TEXTURE_RECTANGLE) {
+        bindCalibration(gl::TextureRef(_inputTexId,_inputWidth,_inputHeight,_target));
+      }
+
+      inline void bindCalibration(gl::TextureRef const& _input)
       {
         glUseProgram(programId_);
 
         /// Different uniform location for different texture target
-        switch(_target)
+        switch(_input.target())
         {
-        case GL_TEXTURE_RECT:
+        case GL_TEXTURE_RECTANGLE:
+          glUniform1i(inputUseRectLoc_,GLint(true));
           glUniform1i(inputTex2DLoc_,0);
           break;
         case GL_TEXTURE_2D:
+          glUniform1i(inputUseRectLoc_,GLint(false));
           glUniform1i(inputTexRectLoc_,0);
           break;
         }
 
         /// Bind input texture
         glActiveTexture(GL_TEXTURE0 + 0);
-        glBindTexture(_target, _inputTexId);
+        glBindTexture(_input.target(), _input.id());
+        glUniform1i(inputWidthLoc_,_input.width());
+        glUniform1i(inputHeightLoc_,_input.height());
 
-        /// Bind calibration texture
-        glUniform1i(calibrationTexLoc_,1);
+        /// Bind pixeldata texture
+        glUniform1i(pixeldataTexLoc_,1);
         glActiveTexture(GL_TEXTURE0 + 1);
-        glBindTexture(GL_TEXTURE_RECT, calibrationTex_.textureId());
+        glBindTexture(GL_TEXTURE_RECTANGLE, pixeldataTex_.textureId());
 
         /// Bind colorcorrection lookup texture;
         glUniform1i(colorCorrectionTexLoc_,2);
         glActiveTexture(GL_TEXTURE0 + 2);
         glBindTexture(GL_TEXTURE_1D, colorCorrectionTex_.textureId());
-
-        glUniform1i(inputWidthLoc_,_inputWidth);
-        glUniform1i(inputHeightLoc_,_inputHeight);
       }
 
-      inline void releaseCalibration() const
+      inline void releaseCalibration() 
       {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_1D,0);
         glBindTexture(GL_TEXTURE_2D,0);
-        glBindTexture(GL_TEXTURE_RECT,0);
+        glBindTexture(GL_TEXTURE_RECTANGLE,0);
         glUseProgram(0);
       }
 
-      void render(
-        GLuint _inputTexId,
-        GLuint _inputWidth,
-        GLuint _inputHeight,
-        GLuint _target = GL_TEXTURE_RECT) const
-      {
-        bindCalibration(_inputTexId,_inputWidth,_inputHeight);
+      inline void render(gl::TextureRef const& _tex) {
+        bindCalibration(_tex);
 
-        // Render rectangle
+        auto& _r = contentRect_;
+
+        glBegin(GL_TRIANGLE_STRIP);
+        glVertex2i(_r.offsetX()             ,_r.offsetY());
+        glVertex2i(_r.offsetX() + _r.width(),_r.offsetY());
+        glVertex2i(_r.offsetX()             ,_r.offsetY() + _r.height());
+        glVertex2i(_r.offsetX() + _r.width(),_r.offsetY() + _r.height());
+        glEnd();
 
         releaseCalibration();
       }
 
+      inline void render(
+        GLuint _inputTexId,
+        GLuint _inputWidth,
+        GLuint _inputHeight,
+        GLuint _target = GL_TEXTURE_RECTANGLE) 
+      {
+        render(gl::TextureRef(_inputTexId,_inputWidth,_inputHeight,_target));
+      }
+
+      inline void destroy() {
+        colorCorrectionTex_.destroy();
+        pixeldataTex_.destroy();
+      }
+
     private:
-      Rect viewportRect_;
+      Rect contentRect_;
 
       TextureRGBA32F colorCorrectionTex_;
 
-      GLuint colorCorrectionTexId_;
       GLint colorCorrectionTexLoc_;
-      GLint colorCorrectionTexWidth_;
-      GLint colorCorrectionTexWidthLoc_;
 
-      TextureRGBA16 calibrationTex_;
-      GLint calibrationTexLoc_;
+      TextureRGBA16 pixeldataTex_;
+      GLint pixeldataTexLoc_;
+      GLint pixeldataTexWidthLoc_;
+      GLint pixeldataTexHeightLoc_;
 
       GLint inputTex2DLoc_;
       GLint inputTexRectLoc_;
+      GLint inputUseRectLoc_;
       GLint inputWidthLoc_;
       GLint inputHeightLoc_;
 

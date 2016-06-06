@@ -37,7 +37,6 @@ namespace omnic
   {
     namespace util
     {
-
       /// Pointer deleter functor
       struct QtDeleter
       {
@@ -56,3 +55,5 @@ namespace omnic
     using util::QUniquePtr;
   }
 }
+
+#endif /* OMNIC_QT_UTIL_H_ */

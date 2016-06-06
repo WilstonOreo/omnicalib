@@ -19,6 +19,7 @@ cm8kr_import(
   gl
   plugin
   cpack
+  test
 )
 
 cm8kr_set_version(1 0 0)
@@ -33,9 +34,11 @@ LIST(APPEND QT_MODULES "OpenGL")
 
 ########### BUILD_TARGETS ############
 
-enable_testing()
+cm8kr_add_shared_library(omnic_qt ${CMAKE_SOURCE_DIR}/src/lib/qt ) 
 
-add_executable(Serialization src/test/Serialization.cpp )
+cm8kr_add_executable(sampleApp ${CMAKE_SOURCE_DIR}/src/sample )
 
-add_test(Serialization Serialization)
+cm8kr_add_test(Serialization "")
+
+
 

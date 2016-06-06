@@ -38,6 +38,14 @@
 #define OMNIC_DEBUG()
 #endif
 
+ #ifdef OMNIC_DOXYGEN_INVOKED
+ #define OMNIC_STRINGIZE_SOURCE(source)
+ #else
+ #define OMNIC_STRINGIZE_SOURCE(...) #__VA_ARGS__
+ #endif
+ 
+#define OMNIC_SOURCE(VAR,...) \
+  const char VAR[] = OMNIC_STRINGIZE_SOURCE(...)
 
 namespace omnic {
   namespace util {

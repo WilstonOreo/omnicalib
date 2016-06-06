@@ -30,6 +30,9 @@
 
 #include <vector>
 #include <QObject>
+#include <omnic/gl/TextureRef.h>
+#include <omnic/qt/util.h>
+#include <omnic/Calibration.h>
 #include <omnic/qt/ScreenWidget.h>
 
 namespace omnic {
@@ -41,18 +44,54 @@ namespace omnic {
       Output();
       ~Output();
 
+      /// Show all output screens
+      void showScreens();
+
+      /// Hide all output screen
+      void hideScreens();
+
+      /// Show virtual screens (non fullscreen windows)
       void showVirtualScreens();
+
+      /// Hide virtual screens (non fullscreen windows)
       void hideVirtualScreens();
     
+      /// Set calibration and setup output screens
       void setCalibration(omnic::Calibration const&);
-      omnic::Calibration const& calibration();
+      
+      /// Return current calibration
+      omnic::Calibration const& calibration() const;
 
-      void setTextureId(GLuint _widget);
+      /// Remove calibration and remove screen widgets
+      void removeCalibration();
+
+      /**@brief Set input texture with id, size and target
+         @param _textureId OpenGL id of texture
+         @param _textureWidth Width (in pixels) of texture
+         @param _textureHeight Height (in pixels) of texture
+         @param _target Texture target (GL_TEXTURE_RECTANGLE by default)
+       **/
+      void setTexture(GLuint _textureId,
+          uint32_t _textureWidth,
+          uint32_t _textureHeight,
+          GLuint _target = GL_TEXTURE_RECTANGLE 
+      );
+
+      /// Set texture by given reference to texture
+      void setTexture(gl::TextureRef const& _texture);
+
+      /**@brief Return reference to texture.
+       * @detail Texture id, size and target is accessible from this struct
+       **/
+      gl::TextureRef const& texture() const;
 
       /// Update all widgets
       void update();
 
     private:
+      ScreenWidget* getWidgetFromScreen(omnic::Rect const&);
+
+      gl::TextureRef texture_;
       omnic::Calibration calibration_;
       std::vector<QUniquePtr<ScreenWidget>> widgets_;
     };

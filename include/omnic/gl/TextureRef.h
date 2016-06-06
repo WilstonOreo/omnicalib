@@ -26,36 +26,62 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef OMNIC_GL_TEXTUREREF_H_
+#define OMNIC_GL_TEXTUREREF_H_
 
-#ifndef OMNIC_QT_WRAPPER_H_
-#define OMNIC_QT_WRAPPER_H_
-
-#include <QRect>
-#include <omnic/Rect.h>
+#include <omnic/gl/types.h>
 
 namespace omnic {
+  namespace gl {
+    /// Reference to texture with id, width, height and target
+    struct TextureRef { 
+      /**@brief Constructor with texture id, width, height and optional target
+         @param _textureId OpenGL id of texture
+         @param _textureWidth Width (in pixels) of texture
+         @param _textureHeight Height (in pixels) of texture
+         @param _target Texture target (GL_TEXTURE_2D by default)
+       **/
+      TextureRef(GLuint _id = 0,
+          uint32_t _width = 0,
+          uint32_t _height = 0,
+          GLuint _target = GL_TEXTURE_2D) :
+        id_(_id),
+        width_(_width),
+        height_(_height),
+        target_(_target) {}
 
-  namespace qt {
-    /// Convert OMNIC rectangle to Qt rectangle
-    static inline void wrap(omnic::Rect const& _in, QRect& _out) {
-      _out = QRect(QPoint(_in.offsetX(),_in.offsetY()),QSize(_in.width(),_in.height()));
-    }
-    
-    /// Convert Qt rectangle to OMNIC rectangle
-    static inline void wrap(QRect const& _in, omnic::Rect& _out) {  
-      _out = omnic::Rect(_in.left(),_in.top(),_in.width(),_in.height());
-    }
+      /// Construct from object like QOpenGLTexture
+      template<typename T>
+      TextureRef(T const& _t) :
+        id_(_t.textureId()),
+        width_(_t.width()),
+        height_(_t.height()),
+        target_(_t.target()) {
+      }
 
-    /// Convenience function for return value
-    template<typename A, typename B>
-    A wrap(B const& _b) {
-      A _a;
-      wrap(_b,_a);
-      return _a;
-    }
+      inline GLuint id() const {
+        return id_;
+      }
+
+      inline uint32_t width() const {
+        return width_;
+      }
+
+      inline uint32_t height() const {
+        return height_;
+      }
+
+      inline GLuint target() const {
+        return target_;
+      }
+
+    private:
+      GLuint id_;
+      uint32_t width_;
+      uint32_t height_;
+      GLuint target_;
+    };
   }
 }
 
-
-#endif /* OMNIC_QT_WRAPPER_H_ */
-
+#endif /* OMNIC_GL_TEXTUREREF_H_ */

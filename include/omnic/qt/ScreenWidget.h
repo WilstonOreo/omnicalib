@@ -29,26 +29,47 @@
 #define OMNIC_QT_SCREENWIDGET_H_
 
 #include <QOpenGLWidget>
+#include <QOpenGLFunctions>
+#include <omnic/gl/TextureRef.h>
+#include <omnic/gl/Renderer.h>
 #include <omnic/util.h>
-#include 
+#include <omnic/CalibratedProjector.h>
 
 namespace omnic {
   namespace qt {
-    class ScreenWidget : public QOpenGLWidget {
+    /// A widget for a complete screen
+    class ScreenWidget : 
+      public QOpenGLWidget,
+      protected QOpenGLFunctions {
       Q_OBJECT
     public:
       explicit ScreenWidget(QWidget *_parent = nullptr);
       virtual ~ScreenWidget();
 
-      omnic::Rect const& screenGeometry();
+      /// Return screen geometry of this widget
+      QRect const& screenGeometry() const;
+
+      /// Return if the assigned screen is virtual
       bool isVirtual() const;
 
+
       void addCalibratedProjector(omnic::CalibratedProjector const&);
+      void removeProjectors();
 
+      void setTexture(gl::TextureRef const&);
 
+      gl::TextureRef const& texture() const;
+
+    protected:
+      void paintGL();
+
+      void initializeGL();
 
     private:
-      omnic::Rect screenGeometry_;
+      QRect screenGeometry_;
+      bool isVirtual_ = false;
+
+      gl::TextureRef tex_;
 
       std::vector<gl::Renderer> renderers_;
     };
