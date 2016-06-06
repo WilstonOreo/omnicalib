@@ -62,7 +62,7 @@ namespace omnic {
 
     protected:
       void paintGL();
-
+      void resizeGL(int w, int h);
       void initializeGL();
 
     private:

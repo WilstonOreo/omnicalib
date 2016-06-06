@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
   // This line is absolutely mandatory for being able to have multiple
   // QOpenGLWidgets in different windows!!!
   QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
-
+/*
   QSurfaceFormat _format;
 
   _format.setProfile(QSurfaceFormat::CompatibilityProfile);
@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
   _format.setOption(QSurfaceFormat::DebugContext);
 #endif
   QSurfaceFormat::setDefaultFormat(_format);
-
+*/
   QApplication _a(argc, argv);
 
   // Get filename of calibration from command line arguments
