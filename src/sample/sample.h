@@ -26,41 +26,40 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef OMNIC_GL_FUNCTIONS_H_
-#define OMNIC_GL_FUNCTIONS_H_
+#ifndef OMNIC_SAMPLE_H_
+#define OMNIC_SAMPLE_H_
 
-#include <omnic/gl/types.h>
+#include <omnic/qt/Output.h>
 
-namespace omnic
-{
-  namespace gl
-  {
-    template<GLuint FORMAT, typename T>
-    void texImage(GLuint _target, int _width, int _height, void const* _ptr = nullptr)  
-    {
-      switch (_target) {
-        case GL_TEXTURE_1D:
-          glTexImage1D(_target,0, gl::PixelTypeId<FORMAT,T>::typeId(),
-              _width,0,FORMAT,gl::TypeId<T>::typeId(), _ptr);
-        break; 
-        case GL_TEXTURE_2D:
-        case GL_TEXTURE_RECTANGLE:
-          glTexImage2D(_target, 0, gl::PixelTypeId<FORMAT,T>::typeId(),
-                    _width,
-                    _height, 0,
-              FORMAT, gl::TypeId<T>::typeId(), _ptr);
-        break;
-      }
-    }
-    
-    template<GLuint FORMAT, typename T, typename BUF>
-    void texImage(GLuint _target, BUF const& _buf) {
-      texImage<FORMAT,T>(_target, 
-                traits::width(_buf),
-                traits::height(_buf), 
-                traits::ptr(_buf));
-      }
-  }
+#include <QOpenGLShaderProgram>
+#include <QOpenGLFramebufferObject>
+
+class QTimer;
+
+namespace omnic {
+  class Sample : public QObject, protected QOpenGLFunctions {
+    Q_OBJECT
+  public:
+    Sample(QString const& _filename);
+    ~Sample();
+
+  public slots:
+    void render();
+
+  private:
+    /// Load calibration from file
+    void loadCalibration(QString const&  _filename);
+
+    static double now();
+    static QString fileToStr(QString const& _filename);
+
+    double startTime_;
+    QSize size_;
+    std::unique_ptr<QOpenGLFramebufferObject> framebuffer_;
+    qt::QUniquePtr<QOpenGLShaderProgram> shader_;
+    qt::QUniquePtr<QTimer> timer_;
+    qt::Output output_;
+  };
 }
 
-#endif /* OMNIC_GL_FUNCTIONS_H_ */
+#endif /* OMNIC_SAMPLE_H_ */

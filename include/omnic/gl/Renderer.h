@@ -28,9 +28,10 @@
 #ifndef OMNIC_GL_RENDERER_H_
 #define OMNIC_GL_RENDERER_H_
 
+#include <iostream>
 #include <omnic/gl/Texture.h>
 #include <omnic/gl/TextureRef.h>
-#include <omnic/gl/shader.h>
+#include <omnic/gl/ShaderObject.h>
 #include <omnic/CalibratedProjector.h>
 
 namespace omnic
@@ -48,101 +49,72 @@ namespace omnic
 
       inline void initialize(CalibratedProjector const& _proj)
       {
+        if (isInitialized()) return;
+
 #if OMNIC_USE_QT_GL
         initializeOpenGLFunctions();
 #endif
+
         destroy();
 
-        if (programId_ == 0)
-        {
-          programId_ = glCreateProgram();
-          GLint _vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
-          GLint _fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
-
-          const char* _vertexSrc = std::string(CalibrationFragmentShader_120).c_str();
-          const char* _fragmentSrc = std::string(CalibrationFragmentShader_120).c_str();
-
-          glShaderSource(_vertexShaderId,1,&_vertexSrc,NULL);
-          glShaderSource(_fragmentShaderId,1,&_fragmentSrc,NULL);
-
-          glCompileShader(_vertexShaderId);
-          glCompileShader(_fragmentShaderId);
-
-          glAttachShader(programId_, _vertexShaderId);
-          glAttachShader(programId_, _fragmentShaderId);
-          
-          glLinkProgram(programId_);
-
-          glDeleteShader(_vertexShaderId);
-          glDeleteShader(_fragmentShaderId);
-
-          // Get uniforms
-          colorCorrectionTexLoc_ = glGetUniformLocation(programId_,"colorcorrection");
-
-          pixeldataTexLoc_ = glGetUniformLocation(programId_,"pixeldata");
-          pixeldataTexWidthLoc_ = glGetUniformLocation(programId_,"pixeldata_width");
-          pixeldataTexHeightLoc_ = glGetUniformLocation(programId_,"pixeldata_height");
-
-          inputTex2DLoc_ = glGetUniformLocation(programId_,"input_2d");
-          inputUseRectLoc_ = glGetUniformLocation(programId_,"input_use_rect");
-          inputTexRectLoc_ = glGetUniformLocation(programId_,"input_rect");
-          inputWidthLoc_ = glGetUniformLocation(programId_,"input_width");
-          inputHeightLoc_ = glGetUniformLocation(programId_,"input_height");
+        if (!shader().isInitialized()) {
+          shader().initialize();
         }
+
+        contentGeometry_ = _proj.contentGeometry();
 
         auto& _colorCorrectionLookUp = _proj.colorCorrection();
         colorCorrectionTex_.initialize(_colorCorrectionLookUp.data(),GL_TEXTURE_1D);
 
-        pixeldataTex_.initialize(_proj.pixelData(),GL_TEXTURE_RECTANGLE);
+        pixeldata_.initialize(_proj.pixelData(),GL_TEXTURE_RECTANGLE);
+        glFlush();
       }
 
       inline bool isInitialized() const
       {
-        return programId_ != 0;
+        return pixeldata_.textureId() && colorCorrectionTex_.textureId();
       }
 
       inline void bindCalibration(
-        GLuint _inputTexId,
+        GLuint _inputId,
         GLuint _inputWidth,
         GLuint _inputHeight,
         GLuint _target = GL_TEXTURE_RECTANGLE) {
-        bindCalibration(gl::TextureRef(_inputTexId,_inputWidth,_inputHeight,_target));
+        bindCalibration(gl::TextureRef(_inputId,_inputWidth,_inputHeight,_target));
       }
 
       inline void bindCalibration(gl::TextureRef const& _input)
       {
-        glUseProgram(programId_);
+        shader().bind();
 
         /// Different uniform location for different texture target
-        switch(_input.target())
-        {
-        case GL_TEXTURE_RECTANGLE:
-          glUniform1i(inputUseRectLoc_,GLint(true));
-          glUniform1i(inputTex2DLoc_,0);
-          break;
-        case GL_TEXTURE_2D:
-          glUniform1i(inputUseRectLoc_,GLint(false));
-          glUniform1i(inputTexRectLoc_,0);
-          break;
-        }
+        glUniform1i(shader().inputUseRectLoc(),
+            _input.target() == GL_TEXTURE_2D ? GL_FALSE : GL_TRUE);
+        glUniform1i(shader().inputWidthLoc(),_input.width());
+        glUniform1i(shader().inputHeightLoc(),_input.height());
+        
+        glUniform1i(shader().pixeldataWidthLoc(),pixeldata_.width());
+        glUniform1i(shader().pixeldataHeightLoc(),pixeldata_.height());
 
         /// Bind input texture
+        //glUniform1i(shader().input2DLoc(),0);
+        glUniform1i(shader().inputRectLoc(),0);
         glActiveTexture(GL_TEXTURE0 + 0);
         glBindTexture(_input.target(), _input.id());
-        glUniform1i(inputWidthLoc_,_input.width());
-        glUniform1i(inputHeightLoc_,_input.height());
 
         /// Bind pixeldata texture
-        glUniform1i(pixeldataTexLoc_,1);
+        
+        glUniform1i(shader().pixeldataLoc(),1);
         glActiveTexture(GL_TEXTURE0 + 1);
-        glBindTexture(GL_TEXTURE_RECTANGLE, pixeldataTex_.textureId());
-
+        glBindTexture(GL_TEXTURE_RECTANGLE, pixeldata_.textureId());  
+        
         /// Bind colorcorrection lookup texture;
-        glUniform1i(colorCorrectionTexLoc_,2);
+        glUniform1i(shader().colorCorrectionLoc(),2);
         glActiveTexture(GL_TEXTURE0 + 2);
         glBindTexture(GL_TEXTURE_1D, colorCorrectionTex_.textureId());
       }
 
+      /// Release calibration 
       inline void releaseCalibration() 
       {
         glActiveTexture(GL_TEXTURE0);
@@ -152,54 +124,64 @@ namespace omnic
         glUseProgram(0);
       }
 
+      /// Render with given texture ref 
       inline void render(gl::TextureRef const& _tex) {
         bindCalibration(_tex);
 
-        auto& _r = contentRect_;
+        auto& _r = contentGeometry_;
 
         glBegin(GL_TRIANGLE_STRIP);
+        glTexCoord2f(0.0,0.0);
         glVertex2i(_r.offsetX()             ,_r.offsetY());
+        glTexCoord2f(1.0,0.0);
         glVertex2i(_r.offsetX() + _r.width(),_r.offsetY());
+        
+        glTexCoord2f(0.0,1.0);
         glVertex2i(_r.offsetX()             ,_r.offsetY() + _r.height());
+        glTexCoord2f(1.0,1.0);
         glVertex2i(_r.offsetX() + _r.width(),_r.offsetY() + _r.height());
         glEnd();
 
         releaseCalibration();
       }
 
+      /// Render with given texture id, size and target 
       inline void render(
-        GLuint _inputTexId,
+        GLuint _inputId,
         GLuint _inputWidth,
         GLuint _inputHeight,
         GLuint _target = GL_TEXTURE_RECTANGLE) 
       {
-        render(gl::TextureRef(_inputTexId,_inputWidth,_inputHeight,_target));
+        render(gl::TextureRef(_inputId,_inputWidth,_inputHeight,_target));
       }
 
       inline void destroy() {
         colorCorrectionTex_.destroy();
-        pixeldataTex_.destroy();
+        pixeldata_.destroy();
+      } 
+
+      inline Rect const& contentGeometry() const {
+        return contentGeometry_;
+      }
+
+      
+      inline bool blendmaskAlpha() const {
+        return blendmaskAlpha_;
       }
 
     private:
-      Rect contentRect_;
+      Rect contentGeometry_;
+
+      bool blendmaskAlpha_ = false;
+
 
       TextureRGBA32F colorCorrectionTex_;
+      TextureRGBA16 pixeldata_;
 
-      GLint colorCorrectionTexLoc_;
-
-      TextureRGBA16 pixeldataTex_;
-      GLint pixeldataTexLoc_;
-      GLint pixeldataTexWidthLoc_;
-      GLint pixeldataTexHeightLoc_;
-
-      GLint inputTex2DLoc_;
-      GLint inputTexRectLoc_;
-      GLint inputUseRectLoc_;
-      GLint inputWidthLoc_;
-      GLint inputHeightLoc_;
-
-      GLint programId_ = 0;
+      static ShaderObject& shader() {
+        static ShaderObject shader_;
+        return shader_;
+      };
     };
   }
 }

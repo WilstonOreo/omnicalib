@@ -29,7 +29,12 @@
 #ifndef OMNIC_GL_SHADER_H_
 #define OMNIC_GL_SHADER_H_
 
+#include <sstream>
 #include <omnic/util.h>
+
+#ifndef OMNIC_GL_SHADERVERSION
+  #define OMNIC_GL_SHADERVERSION 120
+#endif
 
 namespace omnic {
   namespace gl {
@@ -41,7 +46,7 @@ namespace omnic {
      );
 
      const char CalibrationFragmentShader_120[] =  OMNIC_STRINGIZE_SOURCE(
-      uniform sampler2D pixeldata;
+      uniform sampler2DRect pixeldata;
       uniform int pixeldata_width;
       uniform int pixeldata_height;
       uniform sampler1D colorcorrection;
@@ -62,21 +67,42 @@ namespace omnic {
       }
 
       void main() {
-        vec2 uv = gl_FragCoord.xy / vec2(pixeldata_width,pixeldata_height);
-        vec4 pixeldata_pixel = texture2D(pixeldata,uv);
-        
-        vec4 color = input_use_rect ?
-          texture2DRect(input_rect,calib.st * vec2(input_width,input_height)) :
-          texture2D(input_rect,pixeldata_pixel.st);
+        vec2 uv = gl_TexCoord[0].xy; 
+        vec4 pixeldata_pixel = texture2DRect(pixeldata,uv * vec2(pixeldata_width,pixeldata_height));
+
+        vec4 color = vec4(1.0);
+          color = texture2DRect(input_rect,pixeldata_pixel.st * vec2(input_width,input_height));
 
         if (blendmask_alpha) {
           gl_FragColor = vec4(apply_colorcorrection(color.rgb),pixeldata_pixel.a);
         } else {
           gl_FragColor = vec4(apply_colorcorrection(color.rgb)*pixeldata_pixel.a,1.0);
         }
-
       }
     );
+
+    /// Get shader source from const char and attach version pragma
+    template<typename SOURCE>
+    inline static std::string getShaderSource(int _version, SOURCE const& _src) {
+      std::stringstream _ss;
+      _ss << "#version " << _version << std::endl;
+      std::string _versionString(_ss.str());
+      return std::string(_versionString + _src);
+    }
+
+    /// Get calibration vertex shader source with version pragma
+    inline static const char* getVertexShaderSource(int _version = OMNIC_GL_SHADERVERSION) {
+      static std::string _vertexSrc = 
+        getShaderSource(_version,CalibrationVertexShader_120);
+      return _vertexSrc.c_str();
+    }
+    
+    /// Get calibration vertex shader source with version pragma
+    inline static const char* getFragmentShaderSource(int _version = OMNIC_GL_SHADERVERSION) {
+      static std::string _fragmentSrc = 
+        getShaderSource(_version,CalibrationFragmentShader_120);
+      return _fragmentSrc.c_str();
+    }
   }
 }
 

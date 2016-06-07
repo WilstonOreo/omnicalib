@@ -71,6 +71,8 @@ namespace omnic {
 
       gl::TextureRef tex_;
 
+      std::vector<omnic::CalibratedProjector> proj_;
+
       std::vector<gl::Renderer> renderers_;
     };
   }

@@ -1,0 +1,4 @@
+# Build options for OmniC Qt bindings
+
+SET_TARGET_PROPERTIES(omnic_qt PROPERTIES COMPILE_FLAGS -DOMNIC_USE_QT_GL)
+

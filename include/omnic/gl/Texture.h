@@ -72,14 +72,14 @@ namespace omnic {
         GLuint _texId;
         glGenTextures(1, &_texId);
         tex_ = TextureRef(_texId,traits::width(_buf),traits::height(_buf),_target);
-
+        
         bind();
         {
           glTexParameteri(target(), GL_TEXTURE_WRAP_S,     GL_CLAMP_TO_EDGE);
           glTexParameteri(target(), GL_TEXTURE_WRAP_T,     GL_CLAMP_TO_EDGE);
           glTexParameteri(target(), GL_TEXTURE_MIN_FILTER, GL_LINEAR);
           glTexParameteri(target(), GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-          gl::texImage2D<format(),type>(target(),width(),height(),traits::ptr(_buf));
+          gl::texImage<format(),type>(target(),_buf);
         }
         release();
       }
