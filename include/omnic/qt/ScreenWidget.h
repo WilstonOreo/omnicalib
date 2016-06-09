@@ -37,7 +37,7 @@
 
 namespace omnic {
   namespace qt {
-    /// A widget for a complete screen
+    /// A widget for a complete screen which can hold several calibrated outputs
     class ScreenWidget : 
       public QOpenGLWidget,
       protected QOpenGLFunctions {
@@ -52,12 +52,16 @@ namespace omnic {
       /// Return if the assigned screen is virtual
       bool isVirtual() const;
 
-
+      /// Add another calibrated projector and setup GL textures
       void addCalibratedProjector(omnic::CalibratedProjector const&);
+      
+      /// Remove all projectors
       void removeProjectors();
 
+      /// Set input texture
       void setTexture(gl::TextureRef const&);
 
+      /// Return reference to input texture
       gl::TextureRef const& texture() const;
 
     protected:
@@ -66,13 +70,14 @@ namespace omnic {
       void initializeGL();
 
     private:
+      void resetOpenGLState();
       QRect screenGeometry_;
       bool isVirtual_ = false;
 
       gl::TextureRef tex_;
 
-      std::vector<omnic::CalibratedProjector> proj_;
-
+      int initializations_ = 0;
+      std::vector<CalibratedProjector> projectors_;
       std::vector<gl::Renderer> renderers_;
     };
   }

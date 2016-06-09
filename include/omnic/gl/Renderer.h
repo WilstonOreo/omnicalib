@@ -54,7 +54,6 @@ namespace omnic
 #if OMNIC_USE_QT_GL
         initializeOpenGLFunctions();
 #endif
-
         destroy();
 
         if (!shader().isInitialized()) {
@@ -65,9 +64,7 @@ namespace omnic
 
         auto& _colorCorrectionLookUp = _proj.colorCorrection();
         colorCorrectionTex_.initialize(_colorCorrectionLookUp.data(),GL_TEXTURE_1D);
-
         pixeldata_.initialize(_proj.pixelData(),GL_TEXTURE_RECTANGLE);
-        glFlush();
       }
 
       inline bool isInitialized() const
@@ -168,6 +165,11 @@ namespace omnic
       inline bool blendmaskAlpha() const {
         return blendmaskAlpha_;
       }
+      
+      inline static ShaderObject& shader() {
+        static ShaderObject shader_;
+        return shader_;
+      }
 
     private:
       Rect contentGeometry_;
@@ -178,10 +180,6 @@ namespace omnic
       TextureRGBA32F colorCorrectionTex_;
       TextureRGBA16 pixeldata_;
 
-      static ShaderObject& shader() {
-        static ShaderObject shader_;
-        return shader_;
-      };
     };
   }
 }

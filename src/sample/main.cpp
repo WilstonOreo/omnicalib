@@ -54,6 +54,7 @@ int main(int argc, char* argv[]) {
   QString _filename;
   if (_args.size() < 2) {
     qDebug() << "Usage: ./bin/Debug/sampleApp calibration.omnic";
+    qDebug() << "Pass omnic calibration file as command line argument.";
     return EXIT_FAILURE;
   }
 
@@ -63,6 +64,7 @@ int main(int argc, char* argv[]) {
 
   _filename = _filename.trimmed();
 
+  /// Run sample application
   omnic::Sample _sample(_filename);
   return _a.exec();
 }

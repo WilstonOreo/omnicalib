@@ -37,6 +37,11 @@
 class QTimer;
 
 namespace omnic {
+  
+  /**@brief Main class for sample application
+     @detail Holds renderered output screen widgets and 
+             framebuffer input texture 
+   **/
   class Sample : public QObject, protected QOpenGLFunctions {
     Q_OBJECT
   public:
@@ -50,13 +55,24 @@ namespace omnic {
     /// Load calibration from file
     void loadCalibration(QString const&  _filename);
 
+    /// Get current time in seconds
     static double now();
+
+    /// Return contents of a file for string
     static QString fileToStr(QString const& _filename);
 
     double startTime_;
+
+    /// Size of renderered input
     QSize size_;
+
+    /// Frame buffer object to be rendered to
     std::unique_ptr<QOpenGLFramebufferObject> framebuffer_;
+
+    /// Shader program which renders content
     qt::QUniquePtr<QOpenGLShaderProgram> shader_;
+
+    /// Update timer
     qt::QUniquePtr<QTimer> timer_;
     qt::Output output_;
   };

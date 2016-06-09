@@ -32,12 +32,14 @@
 #include <omnic/qt/wrapper.h>
 
 #include <QMatrix4x4>
+#include <QOpenGLFramebufferObject>
 
 namespace omnic {
   namespace qt {
     ScreenWidget::ScreenWidget(QWidget* _parent) :
       QOpenGLWidget(_parent) {
       removeProjectors();
+
     }
 
     ScreenWidget::~ScreenWidget() {
@@ -73,27 +75,35 @@ namespace omnic {
 
         this->show();
       }
-    
-      QOpenGLContext::globalShareContext()->makeCurrent(context()->surface());
-      
+
       if (screenGeometry_ == _screenGeometry) {
-        proj_.emplace_back(_proj);
+        projectors_.emplace_back(_proj);
         update();
       }
     }
     
     void ScreenWidget::removeProjectors() {
       renderers_.clear();
+      projectors_.clear();
       this->hide();
     }
 
-    void ScreenWidget::resizeGL(int w, int h) {
-
+    void ScreenWidget::resizeGL(int _w, int _h) {
+      makeCurrent();
+      int _d = devicePixelRatio();
+      int _width = screenGeometry_.width();
+      int _height = screenGeometry_.height();
+      glViewport(0, 0, _width * _d, _height * _d);
     }
 
 
     void ScreenWidget::initializeGL() {
+      QOpenGLContext::globalShareContext()->makeCurrent(context()->surface());
       initializeOpenGLFunctions();
+      resetOpenGLState();
+
+      gl::Renderer::shader().initialize();
+      QOpenGLContext::globalShareContext()->doneCurrent();
     }
     
     void ScreenWidget::setTexture(gl::TextureRef const& _tex) {
@@ -107,27 +117,15 @@ namespace omnic {
 
     void ScreenWidget::paintGL() {
       makeCurrent();
-      
-    //  if (renderers_.size() != proj_.size()) {
-        renderers_.clear();
-        for (auto& _proj : proj_) {
-          renderers_.emplace_back(_proj);
-        }
-    //  }
-      
-      int _d = devicePixelRatio();
+       
       int _w = screenGeometry_.width();
       int _h = screenGeometry_.height();
-      
-      glViewport(0, 0, _w * _d, _h * _d);
+       
       glClearColor(0.0, 0.0, 0.0, 1.0);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  
       if (tex_.id() == 0) return;
       
-
-      glEnable(GL_BLEND);
-
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
 
@@ -137,11 +135,67 @@ namespace omnic {
  
       glMatrixMode(GL_MODELVIEW);
       glLoadIdentity();
+     
+      /// Work around for Qt OpenGL bug:
+      // renderers need to be initialized so calibration texture is uploaded properly
+      if (renderers_.size() != projectors_.size() || initializations_ < 2) {
+        renderers_.clear();
+        for (auto& _proj : projectors_) {
+          renderers_.emplace_back(_proj);
+        }
+        ++initializations_;
+      }
 
       for (auto& _renderer : renderers_) {   
         _renderer.render(tex_);
       }
     }
-  }
 
+    void ScreenWidget::resetOpenGLState() {
+          glBindBuffer(GL_ARRAY_BUFFER, 0);
+          glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+          if (QOpenGLContext::currentContext()->isOpenGLES() ||
+              (openGLFeatures() & QOpenGLFunctions::FixedFunctionPipeline)) {
+            int maxAttribs;
+            glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
+
+            for (int i = 0; i < maxAttribs; ++i) {
+              glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, 0);
+              glDisableVertexAttribArray(i);
+            }
+          }
+          glActiveTexture(GL_TEXTURE0);
+          glBindTexture(GL_TEXTURE_2D, 0);
+          glDisable(GL_DEPTH_TEST);
+          glDisable(GL_STENCIL_TEST);
+          glDisable(GL_SCISSOR_TEST);
+          glDisable(GL_CULL_FACE);
+          glColorMask(true, true, true, true);
+          glClearColor(0, 0, 0, 1);
+
+          glDepthMask(true);
+          glDepthFunc(GL_LESS);
+          glClearDepthf(1);
+
+          glStencilMask(0xff);
+          glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+          glStencilFunc(GL_ALWAYS, 0, 0xff);
+          glUseProgram(0);
+          glDisable(GL_DEPTH_TEST);
+          glDepthFunc(GL_LEQUAL);
+          glEnable(GL_BLEND);
+          glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+          glEnable(GL_LINE_SMOOTH);
+          glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+          glEnable(GL_POINT_SMOOTH);
+          glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+          glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+          glEnable(GL_NORMALIZE);
+
+          // fix outlines z-fighting with quads
+          glPolygonOffset(1, 1);
+          QOpenGLFramebufferObject::bindDefault();
+    }
+  }
 }
