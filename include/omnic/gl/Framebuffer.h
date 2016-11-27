@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2016 "OmniCalibration" by cr8tr
+/* Copyright (c) 2014-2016 "OmniCalibration" by Michael Winkelmann
  * Calibration Format for Omnidome (http://omnido.me).
  * Created by Michael Winkelmann aka Wilston Oreo (@WilstonOreo)
  *
@@ -75,7 +75,7 @@ namespace omnic {
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
           // NULL means reserve texture memory, but texels are undefined
-          gl::texImage2D<FORMAT,T>(GL_TEXTURE_2D,_w,_h);
+          gl::texImage<FORMAT,T>(GL_TEXTURE_2D,_w,_h);
 
           // -------------------------
           glGenFramebuffers(1, &fb_);
